@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+
 from routes.customers import customers_bp
 from routes.stock import stock_bp
 from routes.dashboard import dashboard_bp
