@@ -1,18 +1,11 @@
 import os
 import mysql.connector
-from urllib.parse import urlparse
 
 def get_db():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise RuntimeError("DATABASE_URL not set")
-
-    url = urlparse(database_url)
-
     return mysql.connector.connect(
-        host=url.hostname,
-        user=url.username,
-        password=url.password,
-        database=url.path.lstrip("/"),
-        port=url.port or 3306
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS"),
+        database=os.getenv("DB_NAME"),
+        port=3306
     )
