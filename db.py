@@ -3,7 +3,12 @@ import mysql.connector
 from urllib.parse import urlparse
 
 def get_db():
-    url = urlparse(os.environ["DATABASE_URL"])
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL not set")
+
+    url = urlparse(database_url)
+
     return mysql.connector.connect(
         host=url.hostname,
         user=url.username,
