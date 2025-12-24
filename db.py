@@ -1,13 +1,13 @@
-import mysql.connector
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
+import mysql.connector
+from urllib.parse import urlparse
 
 def get_db():
+    url = urlparse(os.environ["DATABASE_URL"])
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASS"),
-        database=os.getenv("DB_NAME")
+        host=url.hostname,
+        user=url.username,
+        password=url.password,
+        database=url.path.lstrip("/"),
+        port=url.port or 3306
     )
