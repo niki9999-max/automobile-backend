@@ -14,7 +14,9 @@ def get_customers():
     cur.close()
     db.close()
 
-    return jsonify(data)
+    return jsonify(data), 200
+
+
 @customers_bp.route("/customers/<int:customer_id>", methods=["GET"])
 def get_customer(customer_id):
     db = get_db()
@@ -26,7 +28,12 @@ def get_customer(customer_id):
     cur.close()
     db.close()
 
-    return jsonify(data)
+    if not data:
+        return jsonify({"error": "Customer not found"}), 404
+
+    return jsonify(data), 200
+
+
 @customers_bp.route("/customers/count", methods=["GET"])
 def customers_count():
     db = get_db()
@@ -38,4 +45,4 @@ def customers_count():
     cur.close()
     db.close()
 
-    return jsonify({"count": count})
+    return jsonify({"count": count}), 200
