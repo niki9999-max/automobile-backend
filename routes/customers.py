@@ -46,3 +46,26 @@ def customers_count():
     db.close()
 
     return jsonify({"count": count}), 200
+from flask import request
+
+@customers_bp.route("/customers", methods=["POST"])
+def create_customer():
+    data = request.json
+
+    name = data.get("name")
+    email = data.get("email")
+    phone = data.get("phone")
+
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute(
+        "INSERT INTO customers (name, email, phone) VALUES (%s, %s, %s)",
+        (name, email, phone)
+    )
+
+    db.commit()
+    cur.close()
+    db.close()
+
+    return jsonify({"message": "Customer added successfully"}), 201
