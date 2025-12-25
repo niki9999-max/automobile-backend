@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 def get_db():
     database_url = os.getenv("DATABASE_URL")
-
     if not database_url:
         raise RuntimeError("DATABASE_URL not set")
 
