@@ -6,26 +6,36 @@
     <title>Automobile Business Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f4f4; padding: 20px; }
-        .card { margin-bottom: 20px; }
+        body { background-color: #f0f2f5; padding: 20px; }
+        .card { border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .total-box { background: #dc3545; color: white; padding: 20px; border-radius: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 class="text-center mb-4">🚗 Automobile Stock & Customer Manager</h2>
+    <h2 class="text-center mb-4">🚗 Automobile Manager</h2>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-4">
+            <div class="total-box">
+                <h4>Total Pending Amount</h4>
+                <h1 id="totalDue">₹0</h1>
+            </div>
+        </div>
+    </div>
 
     <div class="card p-4">
         <h4>Add New Customer</h4>
         <div class="row g-2">
             <div class="col-md-3">
-                <input type="text" id="name" class="form-control" placeholder="Name">
-            </div>
-            <div class="col-md-3">
-                <input type="email" id="email" class="form-control" placeholder="Email">
+                <input type="text" id="name" class="form-control" placeholder="Name (e.g. Rahul)">
             </div>
             <div class="col-md-3">
                 <input type="text" id="phone" class="form-control" placeholder="Phone">
+            </div>
+            <div class="col-md-3">
+                <input type="number" id="amount" class="form-control" placeholder="Due Amount (₹)">
             </div>
             <div class="col-md-3">
                 <button class="btn btn-primary w-100" onclick="addCustomer()">Add Customer</button>
@@ -35,13 +45,13 @@
 
     <div class="card p-4">
         <h4>Customer List</h4>
-        <table class="table table-striped">
-            <thead>
+        <table class="table table-hover">
+            <thead class="table-light">
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Email</th>
                     <th>Phone</th>
+                    <th>Due Amount</th>
                 </tr>
             </thead>
             <tbody id="customerTable">
@@ -51,36 +61,45 @@
 </div>
 
 <script>
-    const API_URL = window.location.origin; // Automatically gets your Railway URL
+    const API_URL = window.location.origin;
 
-    // 1. Function to Load Customers
     async function loadCustomers() {
         try {
             let response = await fetch(`${API_URL}/customers`);
             let data = await response.json();
             
             let tableBody = document.getElementById("customerTable");
-            tableBody.innerHTML = ""; // Clear list
+            let totalDisplay = document.getElementById("totalDue");
+            
+            tableBody.innerHTML = ""; 
+            let totalAmount = 0;
 
             data.forEach(customer => {
+                // Calculate Total
+                let amount = parseFloat(customer.due_amount || 0);
+                totalAmount += amount;
+
                 let row = `<tr>
                     <td>${customer.id}</td>
-                    <td>${customer.name}</td>
-                    <td>${customer.email}</td>
+                    <td><strong>${customer.name}</strong></td>
                     <td>${customer.phone}</td>
+                    <td class="text-danger fw-bold">₹${amount}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
+
+            // Update the Big Red Box
+            totalDisplay.innerText = "₹" + totalAmount.toLocaleString();
+
         } catch (error) {
             console.error("Error loading data:", error);
         }
     }
 
-    // 2. Function to Add Customer
     async function addCustomer() {
         let name = document.getElementById("name").value;
-        let email = document.getElementById("email").value;
         let phone = document.getElementById("phone").value;
+        let amount = document.getElementById("amount").value;
 
         if(!name || !phone) { alert("Name and Phone are required!"); return; }
 
@@ -88,15 +107,20 @@
             let response = await fetch(`${API_URL}/customers`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: name, email: email, phone: phone })
+                body: JSON.stringify({ 
+                    name: name, 
+                    email: "no-email@test.com", 
+                    phone: phone,
+                    due_amount: amount 
+                })
             });
 
             if (response.ok) {
-                alert("Customer Added!");
-                loadCustomers(); // Reload list
+                alert("Saved!");
                 document.getElementById("name").value = "";
                 document.getElementById("phone").value = "";
-                document.getElementById("email").value = "";
+                document.getElementById("amount").value = "";
+                loadCustomers(); // Reload list to update total
             } else {
                 alert("Failed to add.");
             }
@@ -105,7 +129,6 @@
         }
     }
 
-    // Load data when page opens
     loadCustomers();
 </script>
 

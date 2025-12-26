@@ -25,3 +25,17 @@ if __name__ == '__main__':
     # Required for Railway
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+    # --- TEMPORARY DATABASE FIX ---
+@app.route('/fix-db')
+def fix_db():
+    from db import get_db
+    db = get_db()
+    cur = db.cursor()
+    try:
+        # This adds the 'due_amount' column to your existing table
+        cur.execute("ALTER TABLE customers ADD COLUMN due_amount DECIMAL(10,2) DEFAULT 0.00")
+        db.commit()
+        return "<h1>Success! Database Updated. You can now track amounts.</h1>"
+    except Exception as e:
+        return f"<h1>Error (or already updated): {e}</h1>"
+# ------------------------------

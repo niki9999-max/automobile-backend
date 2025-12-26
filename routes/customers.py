@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 from db import get_db
 
 customers_bp = Blueprint("customers", __name__)
@@ -7,65 +7,38 @@ customers_bp = Blueprint("customers", __name__)
 def get_customers():
     db = get_db()
     cur = db.cursor(dictionary=True)
-
-    cur.execute("SELECT * FROM customers")
+    
+    # We now select due_amount as well
+    cur.execute("SELECT id, name, email, phone, due_amount FROM customers")
     data = cur.fetchall()
-
+    
     cur.close()
     db.close()
-
-    return jsonify(data), 200
-
-
-@customers_bp.route("/customers/<int:customer_id>", methods=["GET"])
-def get_customer(customer_id):
-    db = get_db()
-    cur = db.cursor(dictionary=True)
-
-    cur.execute("SELECT * FROM customers WHERE id = %s", (customer_id,))
-    data = cur.fetchone()
-
-    cur.close()
-    db.close()
-
-    if not data:
-        return jsonify({"error": "Customer not found"}), 404
-
-    return jsonify(data), 200
-
-
-@customers_bp.route("/customers/count", methods=["GET"])
-def customers_count():
-    db = get_db()
-    cur = db.cursor()
-
-    cur.execute("SELECT COUNT(*) FROM customers")
-    count = cur.fetchone()[0]
-
-    cur.close()
-    db.close()
-
-    return jsonify({"count": count}), 200
-from flask import request
+    return jsonify(data)
 
 @customers_bp.route("/customers", methods=["POST"])
-def create_customer():
+def add_customer():
     data = request.json
-
     name = data.get("name")
     email = data.get("email")
     phone = data.get("phone")
+    due_amount = data.get("due_amount", 0) # Default to 0 if empty
+
+    if not name or not phone:
+        return jsonify({"error": "Name and Phone are required"}), 400
 
     db = get_db()
     cur = db.cursor()
 
-    cur.execute(
-        "INSERT INTO customers (name, email, phone) VALUES (%s, %s, %s)",
-        (name, email, phone)
-    )
-
-    db.commit()
-    cur.close()
-    db.close()
-
-    return jsonify({"message": "Customer added successfully"}), 201
+    try:
+        cur.execute(
+            "INSERT INTO customers (name, email, phone, due_amount) VALUES (%s, %s, %s, %s)",
+            (name, email, phone, due_amount)
+        )
+        db.commit()
+        return jsonify({"message": "Customer added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        db.close()
